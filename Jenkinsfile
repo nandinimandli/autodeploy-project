@@ -1,6 +1,4 @@
-@Library('jenkins-shared-library') _
-
-// create variable of map type and set the values
+@Library('jenkins-shared-library-autodeploy') _
 
 def configMap = [
     type: "nodejsEKS",
@@ -8,10 +6,8 @@ def configMap = [
     project: "expense"
 ]
 
-if( ! env.BRANCH_NAME.equalsIgnoreCase('main')){
-    pipelineDecission.decidePipeline(configMap)
+if (!env.BRANCH_NAME.equalsIgnoreCase('main')) {
+    pipelineDecission(configMap)
+} else {
+    echo "✅ Proceed with CR or NON-PROD pipeline"
 }
-else{
-    echo "Proceed with CR or NON-PROD pipeline"
-}
-
