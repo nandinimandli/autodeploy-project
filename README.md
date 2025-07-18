@@ -55,7 +55,7 @@ copy path present in the browser
 
 - Nexus → settings → repo → create → maven2 hosted → name(backend) → version ploicy(mixed) → layout policy(permissiva) → deployment policy (allow redeploy) → create → copy url
 
-- Jenkins → Manage jenkins → create node(expense) → remote root(/home/ec2-user/jenkins-agent) → Labels(AGENT-1) → Usage(only build jobs) → launch via ssh → jenkins-agent.eswarsaikumar.site
+- Jenkins → Manage jenkins → create node(expense) → remote root(/home/ec2-user/jenkins-agent) → Labels(AGENT-1) → Usage(only build jobs) → launch via ssh → jenkins-agent.xxxxxxxx.site
 
 - Jenkins → Expense folder → ok
 
