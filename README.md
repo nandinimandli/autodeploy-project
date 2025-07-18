@@ -96,7 +96,7 @@ After completion of deploying
 
 - SonarQube → Quality gates → Create → Can see conditions here → Can edit anything (on "New code" or on "Overall code" like coverage, critical issues, security rating, vulnerabilities etc) 
 
-- SonarQube → Administration → Configuration → Webhook → Create → Name: jenkins → Url: https://jenkins.eswarsaikumar.site:/8080/sonarqube-webhook/
+- SonarQube → Administration → Configuration → Webhook → Create → Name: jenkins → Url: https://jenkins.xxxxxxxxxxx.site:/8080/sonarqube-webhook/
 
 - GitHub repo → security → code scanning → configure scanning tool → code scanning → tools → codeQL analysis → Set up: default
 
