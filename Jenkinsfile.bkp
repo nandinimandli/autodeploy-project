@@ -1,6 +1,6 @@
 pipeline {
     agent {
-        label 'AGENT-1'
+        label 'AGENT-1'  // Make sure the Jenkins agent is correctly labeled
     }
 
     options {
@@ -10,14 +10,13 @@ pipeline {
     }
 
     parameters {
-        booleanParam(name: 'deploy', defaultValue: false, description: 'Toggle this value')
+        booleanParam(name: 'deploy', defaultValue: false, description: 'Enable this to trigger backend deployment')
     }
 
     environment {
-        nexusUrl = 'http://13.233.238.175:8081'
-        region = "ap-south-1"
-        account_id = "992382681023"
-        // NOTE: You cannot declare 'def' in environment. Moved appVersion to script block
+        nexusUrl = 'http://13.233.238.175:8081'     // ✅ Your Nexus public URL
+        region = 'ap-south-1'                       // ✅ AWS region for EKS/ECR
+        account_id = '102080400969'                 // ✅ Your AWS account ID
     }
 
     stages {
@@ -27,7 +26,7 @@ pipeline {
                 script {
                     def packageJson = readJSON file: 'package.json'
                     env.appVersion = packageJson.version
-                    echo "Application version: ${env.appVersion}"
+                    echo "📦 Application version: ${env.appVersion}"
                 }
             }
         }
@@ -35,9 +34,10 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 sh '''
+                    echo "📥 Installing dependencies..."
                     npm install
                     ls -ltr
-                    echo "Application version: ${appVersion}"
+                    echo "✅ Application version: ${env.appVersion}"
                 '''
             }
         }
@@ -45,40 +45,16 @@ pipeline {
         stage('Build') {
             steps {
                 sh '''
-                    zip -q -r backend-${appVersion}.zip * -x Jenkinsfile -x backend-${appVersion}.zip
+                    echo "📦 Building application ZIP file..."
+                    zip -q -r backend-${env.appVersion}.zip * -x Jenkinsfile -x backend-${env.appVersion}.zip
                     ls -ltr
                 '''
             }
         }
 
-        /*
-        stage('Docker Build') {
-            steps {
-                sh '''
-                    aws ecr get-login-password --region ${region} | docker login --username AWS --password-stdin ${account_id}.dkr.ecr.${region}.amazonaws.com
-
-                    docker build -t ${account_id}.dkr.ecr.${region}.amazonaws.com/expense-backend:${appVersion} .
-
-                    docker push ${account_id}.dkr.ecr.${region}.amazonaws.com/expense-backend:${appVersion}
-                '''
-            }
-        }
-
-        stage('Helm Deploy') {
-            steps {
-                sh '''
-                    aws eks update-kubeconfig --region ${region} --name expense-dev
-                    cd helm
-                    sed -i 's/IMAGE_VERSION/${appVersion}/g' values.yaml
-                    helm upgrade backend .
-                '''
-            }
-        }
-        */
-
         stage('Sonar Scan') {
             environment {
-                scannerHome = tool 'sonar-6.0' // SonarScanner CLI
+                scannerHome = tool 'sonar-6.0'  // 🔧 Replace with your actual Sonar tool name in Jenkins
             }
             steps {
                 script {
@@ -100,18 +76,19 @@ pipeline {
         stage('Nexus Artifact Upload') {
             steps {
                 script {
+                    echo "🚀 Uploading backend-${env.appVersion}.zip to Nexus..."
                     nexusArtifactUploader(
                         nexusVersion: 'nexus3',
                         protocol: 'http',
                         nexusUrl: "${nexusUrl}",
                         groupId: 'com.expense',
-                        version: "${appVersion}",
-                        repository: "backend",
-                        credentialsId: 'nexus-auth',
+                        version: "${env.appVersion}",
+                        repository: 'backend',
+                        credentialsId: 'nexus-auth',   // 🔐 Must exist in Jenkins credentials
                         artifacts: [[
-                            artifactId: "backend",
+                            artifactId: 'backend',
                             classifier: '',
-                            file: "backend-${appVersion}.zip",
+                            file: "backend-${env.appVersion}.zip",
                             type: 'zip'
                         ]]
                     )
@@ -121,15 +98,14 @@ pipeline {
 
         stage('Deploy') {
             when {
-                expression {
-                    return params.deploy
-                }
+                expression { return params.deploy }
             }
             steps {
                 script {
                     def deployParams = [
-                        string(name: 'appVersion', value: "${appVersion}")
+                        string(name: 'appVersion', value: "${env.appVersion}")
                     ]
+                    echo "📦 Triggering backend-deploy job with version ${env.appVersion}"
                     build job: 'backend-deploy', parameters: deployParams, wait: false
                 }
             }
@@ -138,14 +114,14 @@ pipeline {
 
     post {
         always {
-            echo '🌀 Cleanup: Deleting workspace...'
+            echo '🧹 Cleaning up workspace...'
             deleteDir()
         }
         success {
-            echo '✅ Pipeline completed successfully.'
+            echo '✅ Pipeline executed successfully!'
         }
         failure {
-            echo '❌ Pipeline failed.'
+            echo '❌ Pipeline failed. Please check logs.'
         }
     }
 }
