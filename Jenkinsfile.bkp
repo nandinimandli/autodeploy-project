@@ -14,8 +14,8 @@ pipeline {
     }
 
     environment {
-        nexusUrl = 'http://13.233.238.175:8081/repository/backend/'
-        region = "us-east-1"
+        nexusUrl = 'http://13.233.238.175:8081'
+        region = "ap-south-1"
         account_id = "992382681023"
         // NOTE: You cannot declare 'def' in environment. Moved appVersion to script block
     }
